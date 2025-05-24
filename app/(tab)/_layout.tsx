@@ -1,23 +1,24 @@
 import { Stack } from 'expo-router';
 import * as WebBrowser from 'expo-web-browser';
 import { useEffect } from 'react';
-import { supabase } from '../lib/supabase';
+import { supabase } from '../../lib/supabase';
 
 // Dismiss the in-app browser after OAuth redirect
 WebBrowser.maybeCompleteAuthSession();
 
 export default function RootLayout() {
-  // Clean up Supabase subscriptions on unmount
+  // Ensure Supabase client is initialized
   useEffect(() => {
     return () => {
+      // Clean up any Supabase subscriptions on unmount
       supabase.auth.onAuthStateChange(() => {}).data.subscription.unsubscribe();
     };
   }, []);
 
   return (
-    <Stack screenOptions={{ headerShown: false }}>
-      <Stack.Screen name="(tabs)" />
-      <Stack.Screen name="(auth)" />
+    <Stack>
+      <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+      <Stack.Screen name="(auth)" options={{ headerShown: false }} />
     </Stack>
   );
 }
