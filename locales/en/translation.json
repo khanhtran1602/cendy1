@@ -1,0 +1,49 @@
+{
+  "tabs": {
+    "home": "Home",
+    "chats": "Chats",
+    "settings": "Settings"
+  },
+  "login": {
+    "title": "Welcome to My App",
+    "signIn": "Log in with Google",
+    "signingIn": "Signing in..."
+  },
+  "home": {
+    "welcome": "Welcome, {{name}}!",
+    "signOut": "Log out",
+    "noUser": "No user signed in"
+  },
+  "chats": {
+    "title": "Chats",
+    "placeholder": "This is the Chats screen"
+  },
+  "settings": {
+    "title": "Settings",
+    "language": "Language",
+    "english": "English",
+    "vietnamese": "Vietnamese"
+  },
+   "onboarding": {
+    "title": "Complete Your Profile",
+    "subtitle": "Please provide a display name and optionally upload a photo.",
+    "displayName": "Display Name",
+    "displayNamePlaceholder": "Enter your display name",
+    "displayNameError": "Display name must be at least 2 characters",
+    "photo": "Profile Photo (Optional)",
+    "pickPhoto": "Pick a Photo",
+    "submit": "Submit"
+  },
+  "error": {
+    "title": "Error",
+    "generic": "An error occurred",
+    "signOut": "Failed to sign out",
+    "changeLanguage": "Failed to change language",
+    "invalidDomain": "Please sign in with a student email address",
+    "oauthError": "OAuth flow canceled or failed",
+    "oauthCanceled": "OAuth flow canceled or failed",
+    "signIn": "Failed to sign in",
+    "updateProfile": "Failed to update profile"
+  },
+  "loading": "Loading..."
+}

@@ -1,8 +1,9 @@
 import { Stack } from 'expo-router';
 import * as WebBrowser from 'expo-web-browser';
 import { useEffect } from 'react';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import '../i18n/i18n'; // Initialize i18next
 import { supabase } from '../lib/supabase';
-
 // Dismiss the in-app browser after OAuth redirect
 WebBrowser.maybeCompleteAuthSession();
 
@@ -15,9 +16,11 @@ export default function RootLayout() {
   }, []);
 
   return (
-    <Stack screenOptions={{ headerShown: false }}>
-      <Stack.Screen name="(tabs)" />
-      <Stack.Screen name="(auth)" />
-    </Stack>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <Stack>
+        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+        <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+      </Stack>
+    </GestureHandlerRootView>
   );
 }

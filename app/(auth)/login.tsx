@@ -1,31 +1,37 @@
 import { useRouter } from 'expo-router';
 import { useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Alert, Button, StyleSheet, Text, View } from 'react-native';
 import { useAuth } from '../../hooks/useAuth';
 
 export default function LoginScreen() {
-  const { signInWithGoogle, session, loading, error } = useAuth();
+  const { signInWithGoogle, session, isNewUser, loading, error } = useAuth();
   const router = useRouter();
+  const { t } = useTranslation();
 
-  // Redirect to homepage if already signed in
+  // Redirect based on auth state
   useEffect(() => {
     if (session) {
-      router.replace('/(tab)');
+      if (isNewUser === true) {
+        router.replace('/(auth)/onboarding');
+      } else if (isNewUser === false) {
+        router.replace('/(tabs)/home');
+      }
     }
-  }, [session]);
+  }, [session, isNewUser]);
 
   // Handle errors
   useEffect(() => {
     if (error) {
-      Alert.alert('Error', error.message || 'Failed to sign in with Google');
+      Alert.alert(t('error.title'), error.message || t('error.generic'));
     }
   }, [error]);
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Welcome to Cendy</Text>
+      <Text style={styles.title}>{t('login.title')}</Text>
       <Button
-        title={loading ? 'Signing in...' : 'Log in with Google'}
+        title={loading ? t('login.signingIn') : t('login.signIn')}
         onPress={signInWithGoogle}
         disabled={loading}
       />

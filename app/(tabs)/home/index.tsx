@@ -1,11 +1,13 @@
 import { useRouter } from 'expo-router';
 import { useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Alert, Button, StyleSheet, Text, View } from 'react-native';
-import { useAuth } from '../../hooks/useAuth';
+import { useAuth } from '../../../hooks/useAuth';
 
 export default function HomeScreen() {
   const { session, user, signOut, loading, error } = useAuth();
   const router = useRouter();
+  const { t } = useTranslation();
 
   // Redirect to login if no session
   useEffect(() => {
@@ -17,7 +19,7 @@ export default function HomeScreen() {
   // Handle errors
   useEffect(() => {
     if (error) {
-      Alert.alert('Error', error.message || 'An error occurred');
+      Alert.alert(t('error.title'), error.message || t('error.generic'));
     }
   }, [error]);
 
@@ -26,23 +28,23 @@ export default function HomeScreen() {
       await signOut();
       router.replace('/(auth)/login');
     } catch (err) {
-      Alert.alert('Error', 'Failed to sign out');
+      Alert.alert(t('error.title'), t('error.signOut'));
     }
   };
 
   return (
     <View style={styles.container}>
       {loading ? (
-        <Text>Loading...</Text>
+        <Text>{t('loading')}</Text>
       ) : user ? (
         <>
           <Text style={styles.welcome}>
-            Welcome, {user.user_metadata?.name || 'User'}!
+            {t('home.welcome', { name: user.user_metadata?.name || 'User' })}
           </Text>
-          <Button title="Log out" onPress={handleSignOut} />
+          <Button title={t('home.signOut')} onPress={handleSignOut} />
         </>
       ) : (
-        <Text>No user signed in</Text>
+        <Text>{t('home.noUser')}</Text>
       )}
     </View>
   );

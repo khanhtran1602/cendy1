@@ -3,6 +3,7 @@ import { makeRedirectUri } from 'expo-auth-session';
 import * as QueryParams from 'expo-auth-session/build/QueryParams';
 import * as WebBrowser from 'expo-web-browser';
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { supabase } from '../lib/supabase';
 
 interface AuthState {
@@ -10,119 +11,141 @@ interface AuthState {
   user: User | null;
   loading: boolean;
   error: Error | null;
+  isNewUser: boolean | null;
 }
 
 export const useAuth = () => {
+  const { t } = useTranslation();
   const [authState, setAuthState] = useState<AuthState>({
     session: null,
     user: null,
     loading: true,
     error: null,
+    isNewUser: null,
   });
 
-  // Check initial session
+  // Check initial session and profile
   useEffect(() => {
     const initializeSession = async () => {
       try {
         const { data: { session } } = await supabase.auth.getSession();
-        console.log('Initial session:', session ? 'Found' : 'Not found');
-        setAuthState({
-          session,
-          user: session?.user ?? null,
-          loading: false,
-          error: null,
-        });
+        if (session && session.user) {
+          const isNewUser = await checkProfile(session.user.id);
+          setAuthState({
+            session,
+            user: session.user,
+            loading: false,
+            error: null,
+            isNewUser,
+          });
+        } else {
+          setAuthState({
+            session: null,
+            user: null,
+            loading: false,
+            error: null,
+            isNewUser: null,
+          });
+        }
       } catch (err) {
-        console.error('Error initializing session:', err);
         setAuthState((prev) => ({
           ...prev,
           loading: false,
-          error: err instanceof Error ? err : new Error('Failed to initialize session'),
+          error: err instanceof Error ? err : new Error(t('error.initializeSession')),
+          isNewUser: null,
         }));
       }
     };
     initializeSession();
-  }, []);
+  }, [t]);
 
   // Listen for auth state changes
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      console.log('Auth state change:', event, session ? 'Session present' : 'No session');
-      setAuthState((prev) => ({
-        ...prev,
-        session,
-        user: session?.user ?? null,
-        loading: false,
-        error: null,
-      }));
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (event === 'SIGNED_IN' && session?.user) {
+        const isNewUser = await checkProfile(session.user.id);
+        setAuthState((prev) => ({
+          ...prev,
+          session,
+          user: session.user,
+          loading: false,
+          error: null,
+          isNewUser,
+        }));
+      } else {
+        setAuthState((prev) => ({
+          ...prev,
+          session,
+          user: session?.user ?? null,
+          loading: false,
+          error: null,
+          isNewUser: null,
+        }));
+      }
     });
     return () => subscription.unsubscribe();
-  }, []);
+  }, [t]);
+
+  // Check user profile via Database Function
+  const checkProfile = async (userId: string): Promise<boolean> => {
+    try {
+      const { data, error } = await supabase
+        .rpc('check_profile', { user_id: userId });
+      if (error) throw new Error(error.message);
+      return data.is_new_user ?? false;
+    } catch {
+      return false; // Default to returning user on error
+    }
+  };
 
   // Sign in with Google
   const signInWithGoogle = async () => {
     try {
       setAuthState((prev) => ({ ...prev, loading: true, error: null }));
       const redirectUrl = makeRedirectUri({ scheme: 'cendy', path: 'auth' });
-      console.log('Redirect URL:', redirectUrl); // Debug: Log redirect URL
-
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: redirectUrl, // cendy://auth
+          redirectTo: redirectUrl,
           skipBrowserRedirect: true,
         },
       });
 
-      if (error) {
-        console.error('Supabase OAuth error:', error.message);
-        throw error;
-      }
-      if (!data.url) {
-        console.error('No OAuth URL returned from Supabase');
-        throw new Error('No OAuth URL returned');
-      }
-      console.log('OAuth URL:', data.url); // Debug: Log OAuth URL
+      if (error) throw error;
+      if (!data.url) throw new Error(t('error.noOAuthUrl'));
 
       const result = await WebBrowser.openAuthSessionAsync(data.url, redirectUrl);
-      console.log('WebBrowser result:', result); // Debug: Log browser result
-
       if (result.type === 'success') {
         const { params, errorCode } = QueryParams.getQueryParams(result.url);
-        console.log('Redirect params:', params, 'Error code:', errorCode); // Debug: Log params
-
-        if (errorCode) throw new Error(`OAuth error: ${errorCode}`);
+        if (errorCode) throw new Error(`${t('error.oauthError')}: ${errorCode}`);
 
         const { access_token, refresh_token } = params;
-        if (!access_token) throw new Error('No access token received');
+        if (!access_token) throw new Error(t('error.noAccessToken'));
 
         const { data: sessionData, error: sessionError } = await supabase.auth.setSession({
           access_token,
           refresh_token,
         });
-        if (sessionError) {
-          console.error('Session error:', sessionError.message);
-          throw sessionError;
-        }
+        if (sessionError) throw sessionError;
 
-        console.log('Session set:', sessionData.session ? 'Success' : 'Failed');
+        const isNewUser = await checkProfile(sessionData.session?.user?.id ?? '');
         setAuthState((prev) => ({
           ...prev,
           session: sessionData.session,
           user: sessionData.session?.user ?? null,
           loading: false,
           error: null,
+          isNewUser,
         }));
       } else {
-        console.warn('OAuth flow result:', result.type);
-        throw new Error('OAuth flow canceled or failed');
+        throw new Error(t('error.oauthCanceled'));
       }
     } catch (err) {
-      console.error('Sign-in error:', err);
       setAuthState((prev) => ({
         ...prev,
         loading: false,
-        error: err instanceof Error ? err : new Error('Unknown error during sign-in'),
+        error: err instanceof Error ? err : new Error(t('error.signIn')),
+        isNewUser: null,
       }));
     }
   };
@@ -133,19 +156,19 @@ export const useAuth = () => {
       setAuthState((prev) => ({ ...prev, loading: true, error: null }));
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
-      console.log('Signed out successfully');
       setAuthState({
         session: null,
         user: null,
         loading: false,
         error: null,
+        isNewUser: null,
       });
     } catch (err) {
-      console.error('Sign-out error:', err);
       setAuthState((prev) => ({
         ...prev,
         loading: false,
-        error: err instanceof Error ? err : new Error('Failed to sign out'),
+        error: err instanceof Error ? err : new Error(t('error.signOut')),
+        isNewUser: null,
       }));
     }
   };
@@ -154,33 +177,47 @@ export const useAuth = () => {
   const getSession = async () => {
     try {
       const { data: { session } } = await supabase.auth.getSession();
-      console.log('Current session:', session ? 'Found' : 'Not found');
+      let isNewUser: boolean | null = null;
+      if (session && session.user) {
+        isNewUser = await checkProfile(session.user.id);
+      }
       setAuthState((prev) => ({
         ...prev,
         session,
         user: session?.user ?? null,
         loading: false,
         error: null,
+        isNewUser,
       }));
       return session;
     } catch (err) {
-      console.error('Get session error:', err);
       setAuthState((prev) => ({
         ...prev,
         loading: false,
-        error: err instanceof Error ? err : new Error('Failed to get session'),
+        error: err instanceof Error ? err : new Error(t('error.getSession')),
+        isNewUser: null,
       }));
       return null;
     }
   };
+
+    // Set isNewUser state
+    const setIsNewUser = (isNewUser: boolean | null) => {
+      setAuthState((prev) => ({
+        ...prev,
+        isNewUser,
+      }));
+    };
 
   return {
     session: authState.session,
     user: authState.user,
     loading: authState.loading,
     error: authState.error,
+    isNewUser: authState.isNewUser,
     signInWithGoogle,
     signOut,
     getSession,
+    setIsNewUser,
   };
 };
