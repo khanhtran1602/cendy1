@@ -16,6 +16,7 @@
       "bundleIdentifier": "com.khanhtran160202.cendy"
     },
     "android": {
+      "package": "com.khanhtran160202.cendy",
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"

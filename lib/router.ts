@@ -38,6 +38,7 @@ type RouteParams = {
   Messages?: never;
   MessageConversation: { conversationId: string };
   Hello: never;
+  Onboarding: never;
 };
 
 // Navigate function with type safety

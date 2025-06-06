@@ -9,6 +9,22 @@
     "signIn": "Log in with Google",
     "signingIn": "Signing in..."
   },
+  "completeProfile": {
+    "title": "Complete Your Profile",
+    "displayName": "Display Name",
+    "displayNamePlaceholder": "Enter your display name",
+    "username": "Username",
+    "usernamePlaceholder": "Enter your username",
+    "avatarUrl": "Avatar URL (optional)",
+    "avatarUrlPlaceholder": "Enter your avatar URL",
+    "submit": "Submit",
+    "submitting": "Submitting...",
+    "error": {
+      "requiredFields": "Display name and username are required",
+      "usernameTaken": "Username is already taken",
+      "generic": "Failed to complete profile"
+    }
+  },
   "home": {
     "welcome": "Welcome, {{name}}!",
     "signOut": "Log out",
@@ -24,26 +40,19 @@
     "english": "English",
     "vietnamese": "Vietnamese"
   },
-   "onboarding": {
-    "title": "Complete Your Profile",
-    "subtitle": "Please provide a display name and optionally upload a photo.",
-    "displayName": "Display Name",
-    "displayNamePlaceholder": "Enter your display name",
-    "displayNameError": "Display name must be at least 2 characters",
-    "photo": "Profile Photo (Optional)",
-    "pickPhoto": "Pick a Photo",
-    "submit": "Submit"
-  },
   "error": {
     "title": "Error",
     "generic": "An error occurred",
     "signOut": "Failed to sign out",
     "changeLanguage": "Failed to change language",
-    "invalidDomain": "Please sign in with a student email address",
-    "oauthError": "OAuth flow canceled or failed",
+    "noOAuthUrl": "No OAuth URL returned",
+    "oauthError": "OAuth error",
+    "noAccessToken": "No access token received",
     "oauthCanceled": "OAuth flow canceled or failed",
     "signIn": "Failed to sign in",
-    "updateProfile": "Failed to update profile"
+    "initializeSession": "Failed to initialize session",
+    "getSession": "Failed to get session",
+    "studentEmailRequired": "Student email is required"
   },
   "loading": "Loading..."
 }
